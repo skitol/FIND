@@ -1,0 +1,54 @@
+version: '3.2'
+
+services:
+  app:
+    image: 782410482932.dkr.ecr.us-east-1.amazonaws.com/azimuth1/find:prod-latest
+    ports:
+      - '80:3000'
+    depends_on:
+      - mongo
+      - mbtileserver
+    networks:
+      - lan
+    volumes:
+      - type: bind
+        source: ./data
+        target: /opt/bundle/finddata
+    restart: always
+    environment:
+      ROOT_URL: ${ROOT_URL:-http://localhost}
+      MONGO_URL: mongodb://mongo:27017/meteor
+      PORT: 3000
+
+  mongo:
+    image: mongo:latest
+    command:
+      - --storageEngine=wiredTiger
+    volumes:
+      - mongodata:/data/db
+    ports:
+      - '27017:27017'
+    networks:
+      - lan
+    restart: always
+
+  mbtileserver:
+    image: consbio/mbtileserver:latest
+    volumes:
+      - type: bind
+        source: ./data
+        target: /opt/finddata
+    ports:
+      - '8000:8000'
+    networks:
+      - lan
+    environment:
+      PORT: 8000
+      TILE_DIR: /opt/finddata/tiledata
+    restart: always
+
+volumes:
+  mongodata:
+
+networks:
+  lan:
